@@ -1,0 +1,202 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg:        #0D0D0D;
+    --bg2:       #161616;
+    --bg3:       #1E1E1E;
+    --glass:     rgba(255,255,255,0.06);
+    --glass-b:   rgba(255,255,255,0.12);
+    --border:    rgba(255,255,255,0.08);
+    --border-h:  rgba(255,255,255,0.16);
+    --gold:      #C9A84C;
+    --gold-l:    #E8C96A;
+    --gold-d:    #8A6B28;
+    --text:      #F0EDE8;
+    --text-2:    #A09890;
+    --text-3:    #5A534D;
+    --green:     #1D9E75;
+    --green-l:   #25C490;
+    --red:       #E24B4A;
+    --radius:    20px;
+    --radius-sm: 12px;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100svh;
+    overflow-x: hidden;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  h1, h2, h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    line-height: 1.15;
+  }
+}
+
+@layer components {
+
+  /* ── Screen wrapper ─────────────────────────────────────── */
+  .screen {
+    @apply min-h-svh flex flex-col relative overflow-hidden;
+    background: var(--bg);
+  }
+
+  /* ── Glass card ─────────────────────────────────────────── */
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+  }
+
+  .glass-strong {
+    background: rgba(255,255,255,0.09);
+    border: 1px solid var(--border-h);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border-radius: var(--radius);
+  }
+
+  /* ── Input ──────────────────────────────────────────────── */
+  .input-dark {
+    @apply w-full h-14 px-5 text-sm font-light;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .input-dark::placeholder { color: var(--text-3); }
+  .input-dark:focus {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.06);
+  }
+
+  /* ── Primary gold button ────────────────────────────────── */
+  .btn-gold {
+    @apply w-full h-14 flex items-center justify-center gap-2
+           text-sm font-medium tracking-wide;
+    background: linear-gradient(135deg, var(--gold), var(--gold-d));
+    color: #0D0D0D;
+    border-radius: var(--radius-sm);
+    border: none;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-gold:active  { transform: scale(0.97); }
+  .btn-gold:disabled{ opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Ghost button ───────────────────────────────────────── */
+  .btn-ghost {
+    @apply w-full h-14 flex items-center justify-center gap-2
+           text-sm font-medium;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    transition: border-color 0.2s, color 0.2s, transform 0.15s;
+  }
+  .btn-ghost:hover  { border-color: var(--border-h); color: var(--text); }
+  .btn-ghost:active { transform: scale(0.97); }
+
+  /* ── Veg / Non-veg indicator ────────────────────────────── */
+  .veg-box {
+    @apply inline-flex items-center justify-center w-4 h-4 flex-shrink-0;
+    border: 1.5px solid var(--green);
+    border-radius: 3px;
+  }
+  .veg-box::after {
+    content: '';
+    @apply block w-2 h-2 rounded-full;
+    background: var(--green);
+  }
+  .nonveg-box {
+    @apply inline-flex items-center justify-center w-4 h-4 flex-shrink-0;
+    border: 1.5px solid var(--red);
+    border-radius: 3px;
+  }
+  .nonveg-box::after {
+    content: '';
+    @apply block w-2 h-2 rounded-full;
+    background: var(--red);
+  }
+
+  /* ── Ambient glow orb ───────────────────────────────────── */
+  .orb {
+    @apply absolute rounded-full pointer-events-none;
+    filter: blur(80px);
+    opacity: 0.25;
+  }
+
+  /* ── Gold text ──────────────────────────────────────────── */
+  .text-gold { color: var(--gold); }
+  .text-muted { color: var(--text-2); }
+  .text-faint { color: var(--text-3); }
+}
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse-soft {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position: 200% center; }
+}
+
+.anim-fade-up   { animation: fadeUp   0.5s ease both; }
+.anim-fade-in   { animation: fadeIn   0.4s ease both; }
+.anim-scale-in  { animation: scaleIn  0.4s ease both; }
+.anim-slide-up  { animation: slideUp  0.35s cubic-bezier(.16,1,.3,1) both; }
+
+.delay-1 { animation-delay: 0.08s; }
+.delay-2 { animation-delay: 0.16s; }
+.delay-3 { animation-delay: 0.24s; }
+.delay-4 { animation-delay: 0.32s; }
+
+.gold-shimmer {
+  background: linear-gradient(90deg, var(--gold), var(--gold-l), var(--gold), var(--gold-d));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* ── Scrollbar hide ─────────────────────────────────────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

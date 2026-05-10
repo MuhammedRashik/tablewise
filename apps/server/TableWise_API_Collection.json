@@ -1,0 +1,1286 @@
+{
+  "info": {
+    "name": "TableWise - Complete API Collection",
+    "description": "Full backend test suite. Run in order top to bottom.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",       "value": "http://localhost:8000/api" },
+    { "key": "ownerToken",    "value": "" },
+    { "key": "staffToken",    "value": "" },
+    { "key": "customerToken", "value": "" },
+    { "key": "restaurantId",  "value": "" },
+    { "key": "tableId1",      "value": "" },
+    { "key": "tableId2",      "value": "" },
+    { "key": "tableId3",      "value": "" },
+    { "key": "queueEntryId",  "value": "" },
+    { "key": "queueEntryId2", "value": "" },
+    { "key": "menuItemId1",   "value": "" },
+    { "key": "menuItemId2",   "value": "" },
+    { "key": "menuItemId3",   "value": "" },
+    { "key": "orderId",       "value": "" },
+    { "key": "orderItemId",   "value": "" }
+  ],
+  "item": [
+
+    {
+      "name": "01 — AUTH MODULE",
+      "item": [
+
+        {
+          "name": "01.1 Register Owner",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.accessToken) {",
+                "  pm.collectionVariables.set('ownerToken', res.data.accessToken);",
+                "  console.log('ownerToken saved');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/staff/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Suresh Menon\",\n  \"email\": \"owner@spicegarden.com\",\n  \"password\": \"test@1234\",\n  \"role\": \"owner\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "01.2 Register Staff",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.accessToken) {",
+                "  pm.collectionVariables.set('staffToken', res.data.accessToken);",
+                "  console.log('staffToken saved');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/staff/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya Staff\",\n  \"email\": \"staff@spicegarden.com\",\n  \"password\": \"test@1234\",\n  \"role\": \"staff\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "01.3 Owner Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.accessToken) {",
+                "  pm.collectionVariables.set('ownerToken', res.data.accessToken);",
+                "  console.log('ownerToken refreshed');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/staff/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@spicegarden.com\",\n  \"password\": \"test@1234\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "01.4 Staff Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.accessToken) {",
+                "  pm.collectionVariables.set('staffToken', res.data.accessToken);",
+                "  console.log('staffToken refreshed');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/staff/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"staff@spicegarden.com\",\n  \"password\": \"test@1234\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "01.5 Send OTP (Customer)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/send-otp",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rahul Kumar\",\n  \"phone\": \"9876543210\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "01.6 Verify OTP → Customer Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.accessToken) {",
+                "  pm.collectionVariables.set('customerToken', res.data.accessToken);",
+                "  console.log('customerToken saved');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/verify-otp",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9876543210\",\n  \"otp\": \"PASTE_OTP_FROM_CONSOLE\",\n  \"name\": \"Rahul Kumar\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "01.7 Get Me (Owner)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }]
+          }
+        },
+
+        {
+          "name": "01.8 Get Me (Customer)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }]
+          }
+        },
+
+        {
+          "name": "01.9 Wrong Password (expect 401)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/staff/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@spicegarden.com\",\n  \"password\": \"wrongpassword\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "01.10 Invalid Phone Format (expect 422)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/send-otp",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\",\n  \"phone\": \"12345\"\n}"
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "02 — RESTAURANT MODULE",
+      "item": [
+
+        {
+          "name": "02.1 Create Restaurant",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.restaurant) {",
+                "  pm.collectionVariables.set('restaurantId', res.data.restaurant._id);",
+                "  console.log('restaurantId saved:', res.data.restaurant._id);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/restaurants",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Spice Garden\",\n  \"phone\": \"9876543210\",\n  \"cuisine\": \"South Indian\",\n  \"address\": {\n    \"street\": \"12 Anna Salai\",\n    \"city\": \"Chennai\",\n    \"state\": \"Tamil Nadu\",\n    \"pincode\": \"600001\"\n  }\n}"
+            }
+          }
+        },
+
+        {
+          "name": "02.2 Get My Restaurant (Owner)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/restaurants/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }]
+          }
+        },
+
+        {
+          "name": "02.3 Get Public Restaurant Info (No Auth)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/restaurants/public/{{restaurantId}}"
+          }
+        },
+
+        {
+          "name": "02.4 Get QR Code",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/qr",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }]
+          }
+        },
+
+        {
+          "name": "02.5 Update Restaurant Info",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Spice Garden Premium\",\n  \"cuisine\": \"South Indian & Tandoor\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "02.6 Update Settings",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/settings",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settings\": {\n    \"totalTables\": 12,\n    \"autoBumpMinutes\": 8,\n    \"avgTurnoverMinutes\": 40,\n    \"maxQueueSize\": 50\n  }\n}"
+            }
+          }
+        },
+
+        {
+          "name": "02.7 Close Queue",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/queue/toggle",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isOpen\": false\n}"
+            }
+          }
+        },
+
+        {
+          "name": "02.8 Reopen Queue",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/queue/toggle",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isOpen\": true\n}"
+            }
+          }
+        },
+
+        {
+          "name": "02.9 Regenerate QR Code",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/qr/regenerate",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }]
+          }
+        },
+
+        {
+          "name": "02.10 Create Restaurant Again (expect 409)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/restaurants",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate Restaurant\"\n}"
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "03 — TABLE MODULE",
+      "item": [
+
+        {
+          "name": "03.1 Bulk Create Tables",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.tables && res.data.tables.length >= 3) {",
+                "  pm.collectionVariables.set('tableId1', res.data.tables[0]._id);",
+                "  pm.collectionVariables.set('tableId2', res.data.tables[1]._id);",
+                "  pm.collectionVariables.set('tableId3', res.data.tables[2]._id);",
+                "  console.log('tableIds saved');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/tables/bulk",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tables\": [\n    { \"tableNumber\": \"T1\", \"capacity\": 2, \"location\": \"Window Left\" },\n    { \"tableNumber\": \"T2\", \"capacity\": 2, \"location\": \"Window Right\" },\n    { \"tableNumber\": \"T3\", \"capacity\": 4, \"location\": \"Centre\" },\n    { \"tableNumber\": \"T4\", \"capacity\": 4, \"location\": \"Centre\" },\n    { \"tableNumber\": \"T5\", \"capacity\": 6, \"location\": \"Private Room\" },\n    { \"tableNumber\": \"T6\", \"capacity\": 6, \"location\": \"Private Room\" },\n    { \"tableNumber\": \"T7\", \"capacity\": 2, \"location\": \"Outdoor\" },\n    { \"tableNumber\": \"T8\", \"capacity\": 4, \"location\": \"Outdoor\" }\n  ]\n}"
+            }
+          }
+        },
+
+        {
+          "name": "03.2 Create Single Table",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/tables",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableNumber\": \"VIP-1\",\n  \"capacity\": 8,\n  \"location\": \"VIP Section\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "03.3 Get All Tables",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/tables",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "03.4 Get Available Tables Only",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurantId}}/tables?status=available"
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "03.5 Mark Table as Cleaning",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/tables/{{tableId3}}/status",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cleaning\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "03.6 Mark Table as Available",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/tables/{{tableId3}}/status",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"available\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "03.7 Invalid Transition (expect 400)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/tables/{{tableId1}}/status",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"occupied\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "03.8 Duplicate Table Number (expect 409)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/restaurants/{{restaurantId}}/tables",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableNumber\": \"T1\",\n  \"capacity\": 2\n}"
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "04 — QUEUE MODULE",
+      "item": [
+
+        {
+          "name": "04.1 Customer Joins Queue",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.entry) {",
+                "  pm.collectionVariables.set('queueEntryId', res.data.entry._id);",
+                "  console.log('queueEntryId saved:', res.data.entry._id);",
+                "  console.log('Status:', res.data.entry.status);",
+                "  console.log('Position:', res.data.entry.position);",
+                "  console.log('EWT:', res.data.entry.estimatedWaitMinutes, 'min');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/join",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partySize\": 2,\n  \"notes\": \"Window seat preferred\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "04.2 Get My Queue Position",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/queue/entry/{{queueEntryId}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }]
+          }
+        },
+
+        {
+          "name": "04.3 Staff Views Full Queue",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "04.4 Staff Confirms Entry",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/entry/{{queueEntryId}}/confirm",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "04.5 Staff Calls Customer to Table",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/entry/{{queueEntryId}}/call",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "04.6 Staff Seats Customer",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/entry/{{queueEntryId}}/seat",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "04.7 Join Again (Second Customer)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.entry) {",
+                "  pm.collectionVariables.set('queueEntryId2', res.data.entry._id);",
+                "  console.log('queueEntryId2 saved');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/join",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partySize\": 4,\n  \"notes\": \"Birthday celebration\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "04.8 Customer Leaves Queue",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/queue/entry/{{queueEntryId2}}/leave",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }]
+          }
+        },
+
+        {
+          "name": "04.9 Join for Bump Test",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.entry) {",
+                "  pm.collectionVariables.set('queueEntryId2', res.data.entry._id);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/join",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partySize\": 2\n}"
+            }
+          }
+        },
+
+        {
+          "name": "04.10 Staff Manually Bumps Customer",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/entry/{{queueEntryId2}}/bump",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "04.11 Join for No-Show Test",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.entry) {",
+                "  pm.collectionVariables.set('queueEntryId2', res.data.entry._id);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/join",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partySize\": 2\n}"
+            }
+          }
+        },
+
+        {
+          "name": "04.12 Staff Marks No-Show",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/entry/{{queueEntryId2}}/no-show",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "04.13 Duplicate Join (expect 409)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/join",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partySize\": 2\n}"
+            }
+          }
+        },
+
+        {
+          "name": "04.14 Join with Closed Queue (expect 423)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/join",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partySize\": 2\n}"
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "05 — MENU MODULE",
+      "item": [
+
+        {
+          "name": "05.1 Bulk Create Menu Items",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.items && res.data.items.length >= 3) {",
+                "  pm.collectionVariables.set('menuItemId1', res.data.items[0]._id);",
+                "  pm.collectionVariables.set('menuItemId2', res.data.items[1]._id);",
+                "  pm.collectionVariables.set('menuItemId3', res.data.items[2]._id);",
+                "  console.log('menuItemIds saved');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/bulk",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"name\": \"Paneer Tikka\",\n      \"price\": 220,\n      \"category\": \"starter\",\n      \"isVeg\": true,\n      \"description\": \"Grilled cottage cheese with spices\",\n      \"spiceLevel\": \"medium\",\n      \"tags\": [\"bestseller\"],\n      \"sortOrder\": 1\n    },\n    {\n      \"name\": \"Chicken 65\",\n      \"price\": 280,\n      \"category\": \"starter\",\n      \"isVeg\": false,\n      \"description\": \"Spicy deep fried chicken\",\n      \"spiceLevel\": \"hot\",\n      \"tags\": [\"bestseller\", \"spicy\"],\n      \"sortOrder\": 2\n    },\n    {\n      \"name\": \"Dal Makhani\",\n      \"price\": 180,\n      \"category\": \"main\",\n      \"isVeg\": true,\n      \"description\": \"Slow cooked black lentils in tomato gravy\",\n      \"spiceLevel\": \"mild\",\n      \"sortOrder\": 1\n    },\n    {\n      \"name\": \"Butter Chicken\",\n      \"price\": 320,\n      \"category\": \"main\",\n      \"isVeg\": false,\n      \"description\": \"Tender chicken in creamy tomato sauce\",\n      \"spiceLevel\": \"medium\",\n      \"tags\": [\"chef special\"],\n      \"sortOrder\": 2\n    },\n    {\n      \"name\": \"Butter Naan\",\n      \"price\": 40,\n      \"category\": \"bread\",\n      \"isVeg\": true,\n      \"sortOrder\": 1\n    },\n    {\n      \"name\": \"Garlic Naan\",\n      \"price\": 50,\n      \"category\": \"bread\",\n      \"isVeg\": true,\n      \"sortOrder\": 2\n    },\n    {\n      \"name\": \"Mango Lassi\",\n      \"price\": 80,\n      \"category\": \"beverage\",\n      \"isVeg\": true,\n      \"sortOrder\": 1\n    },\n    {\n      \"name\": \"Gulab Jamun\",\n      \"price\": 90,\n      \"category\": \"dessert\",\n      \"isVeg\": true,\n      \"description\": \"Soft milk dumplings in sugar syrup\",\n      \"sortOrder\": 1\n    }\n  ]\n}"
+            }
+          }
+        },
+
+        {
+          "name": "05.2 Get Public Menu (No Auth)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/public"
+          }
+        },
+
+        {
+          "name": "05.3 Get Public Menu Veg Only",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/menu/{{restaurantId}}/public?isVeg=true"
+            }
+          }
+        },
+
+        {
+          "name": "05.4 Get Public Menu by Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/menu/{{restaurantId}}/public?category=starter"
+            }
+          }
+        },
+
+        {
+          "name": "05.5 Get Full Menu (Staff)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "05.6 Get Single Item",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/item/{{menuItemId1}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "05.7 Update Item Price and Tags",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/item/{{menuItemId1}}",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 240,\n  \"tags\": [\"bestseller\", \"new price\"]\n}"
+            }
+          }
+        },
+
+        {
+          "name": "05.8 Toggle Item Unavailable (Staff)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/item/{{menuItemId2}}/availability",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAvailable\": false\n}"
+            }
+          }
+        },
+
+        {
+          "name": "05.9 Verify Hidden from Public Menu",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/public"
+          }
+        },
+
+        {
+          "name": "05.10 Restore Availability",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/item/{{menuItemId2}}/availability",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAvailable\": true\n}"
+            }
+          }
+        },
+
+        {
+          "name": "05.11 Delete Item (Soft)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/item/{{menuItemId3}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }]
+          }
+        },
+
+        {
+          "name": "05.12 Verify Deleted Item Gone from Public",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/menu/{{restaurantId}}/public"
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "06 — ORDER MODULE",
+      "item": [
+
+        {
+          "name": "06.0 SETUP — Re-join Queue and Seat Customer",
+          "item": [
+
+            {
+              "name": "06.0.1 Customer Joins Queue",
+              "event": [{
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "const res = pm.response.json();",
+                    "if (res.data && res.data.entry) {",
+                    "  pm.collectionVariables.set('queueEntryId', res.data.entry._id);",
+                    "  if (res.data.entry.assignedTableId) {",
+                    "    pm.collectionVariables.set('tableId1', res.data.entry.assignedTableId);",
+                    "  }",
+                    "}"
+                  ]
+                }
+              }],
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/queue/{{restaurantId}}/join",
+                "header": [
+                  { "key": "Content-Type",  "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"partySize\": 2\n}"
+                }
+              }
+            },
+
+            {
+              "name": "06.0.2 Staff Calls Customer",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/queue/{{restaurantId}}/entry/{{queueEntryId}}/call",
+                "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+              }
+            },
+
+            {
+              "name": "06.0.3 Staff Seats Customer",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/queue/{{restaurantId}}/entry/{{queueEntryId}}/seat",
+                "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+              }
+            },
+
+            {
+              "name": "06.0.4 Mark Table Occupied Manually",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/restaurants/{{restaurantId}}/tables/{{tableId1}}/status",
+                "header": [
+                  { "key": "Content-Type",  "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"occupied\"\n}"
+                }
+              }
+            }
+
+          ]
+        },
+
+        {
+          "name": "06.1 Place Order",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.order) {",
+                "  pm.collectionVariables.set('orderId', res.data.order._id);",
+                "  const items = res.data.order.items;",
+                "  if (items && items.length > 0) {",
+                "    pm.collectionVariables.set('orderItemId', items[0]._id);",
+                "  }",
+                "  console.log('orderId saved:', res.data.order._id);",
+                "  console.log('Order number:', res.data.order.orderNumber);",
+                "  console.log('Total:', res.data.order.total);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableId\": \"{{tableId1}}\",\n  \"items\": [\n    { \"menuItemId\": \"{{menuItemId1}}\", \"quantity\": 2, \"notes\": \"Less spicy\" },\n    { \"menuItemId\": \"{{menuItemId2}}\", \"quantity\": 1 },\n    { \"menuItemId\": \"{{menuItemId3}}\", \"quantity\": 3 }\n  ],\n  \"notes\": \"First order, birthday celebration\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "06.2 Get Orders for Table",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/table/{{tableId1}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "06.3 Get All Active Orders (Kitchen View)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/active",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "06.4 Get Single Order",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "06.5 Staff Confirms Order",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}/status",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "06.6 Kitchen Marks Preparing",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}/status",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"preparing\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "06.7 Kitchen Marks Single Item Served",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}/items/{{orderItemId}}/status",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"served\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "06.8 Staff Marks Full Order Served",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}/status",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"served\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "06.9 Customer Requests Bill",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}/bill",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"upi\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "06.10 Staff Marks Order Paid",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}/pay",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staffToken}}" }]
+          }
+        },
+
+        {
+          "name": "06.11 Customer Order History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/my-history?page=1&limit=10"
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }]
+          }
+        },
+
+        {
+          "name": "06.12 Place Second Order for Cancel Test",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.data && res.data.order) {",
+                "  pm.collectionVariables.set('orderId', res.data.order._id);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableId\": \"{{tableId1}}\",\n  \"items\": [\n    { \"menuItemId\": \"{{menuItemId1}}\", \"quantity\": 1 }\n  ]\n}"
+            }
+          }
+        },
+
+        {
+          "name": "06.13 Cancel Order",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}/cancel",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }]
+          }
+        },
+
+        {
+          "name": "06.14 Invalid Transition (expect 400)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}/{{orderId}}/status",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"preparing\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "06.15 Order on Unavailable Table (expect 400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableId\": \"{{tableId2}}\",\n  \"items\": [\n    { \"menuItemId\": \"{{menuItemId1}}\", \"quantity\": 1 }\n  ]\n}"
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "07 — ERROR & EDGE CASES",
+      "item": [
+
+        {
+          "name": "07.1 No Token (expect 401)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+
+        {
+          "name": "07.2 Wrong Role — Customer hits Staff Route (expect 403)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }]
+          }
+        },
+
+        {
+          "name": "07.3 Staff hits Owner-Only Route (expect 403)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/restaurants",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fake Restaurant\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "07.4 Invalid MongoDB ID (expect 422)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/restaurants/public/not-a-valid-id"
+          }
+        },
+
+        {
+          "name": "07.5 Missing Required Fields (expect 422)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{restaurantId}}",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": []\n}"
+            }
+          }
+        },
+
+        {
+          "name": "07.6 Party Size Out of Range (expect 422)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/queue/{{restaurantId}}/join",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partySize\": 99\n}"
+            }
+          }
+        },
+
+        {
+          "name": "07.7 Non-Existent Restaurant (expect 404)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/restaurants/public/64f1a2b3c4d5e6f7a8b9c0d1"
+          }
+        },
+
+        {
+          "name": "07.8 Health Check",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8000/health"
+          }
+        }
+
+      ]
+    }
+
+  ]
+}

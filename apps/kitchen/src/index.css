@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+  html, body {
+    @apply h-full overflow-hidden;
+    /* Kitchen display stays full screen — no scroll */
+    background: #111827; /* dark bg — easier on eyes in bright kitchen */
+  }
+
+  #root { @apply h-full; }
+}
+
+@layer components {
+  /* KOT card urgency border */
+  .kot-card        { @apply rounded-2xl border-2 transition-colors; }
+  .kot-new         { @apply border-brand-400 bg-gray-800 animate-flash-new; }
+  .kot-normal      { @apply border-gray-700 bg-gray-800; }
+  .kot-amber       { @apply border-amber-500 bg-gray-800; }
+  .kot-urgent      { @apply border-red-500 bg-red-950; }
+
+  /* Done button */
+  .btn-done        { @apply w-full py-3 rounded-xl font-medium text-sm transition-all active:scale-95; }
+  .btn-done-active { @apply bg-brand-400 text-white hover:bg-brand-600; }
+  .btn-done-urgent { @apply bg-red-500 text-white hover:bg-red-600; }
+  .btn-done-done   { @apply bg-gray-700 text-gray-400 cursor-default; }
+
+  /* Item row */
+  .item-pending    { @apply text-gray-100; }
+  .item-preparing  { @apply text-amber-300; }
+  .item-served     { @apply text-gray-500 line-through; }
+}

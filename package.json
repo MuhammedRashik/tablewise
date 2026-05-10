@@ -1,0 +1,20 @@
+{
+  "name": "tablewise",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --prefix-colors \"green,cyan,yellow,magenta\" --names \"SERVER,CLIENT,DASH,KITCHEN\" \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:dashboard\" \"npm run dev:kitchen\"",
+    "dev:server":    "cd apps/server && npm run dev",
+    "dev:client":    "cd apps/client && npm run dev",
+    "dev:dashboard": "cd apps/dashboard && npm run dev",
+    "dev:kitchen":   "cd apps/kitchen && npm run dev",
+    "install:all":   "npm install && cd apps/server && npm install && cd ../client && npm install && cd ../dashboard && npm install && cd ../kitchen && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "turbo": "latest"
+  }
+}
