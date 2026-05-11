@@ -224,6 +224,9 @@ importers:
       express-validator:
         specifier: ^7.3.2
         version: 7.3.2
+      ioredis:
+        specifier: ^5.10.1
+        version: 5.10.1
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
