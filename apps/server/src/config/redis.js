@@ -1,8 +1,13 @@
-import { log } from "console";
 import { createClient } from "redis";
 
+const REDIS_URL = process.env.REDIS_URL;
+
 export const redisClient = createClient({
-  url: "redis://localhost:6379",
+  url: REDIS_URL,
+  socket: {
+    tls: true, // important for Upstash
+    rejectUnauthorized: false,
+  },
 });
 
 redisClient.on("error", (err) => {
