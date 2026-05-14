@@ -2,6 +2,7 @@ import api from "../lib/axios";
 
 export const restaurantApi = {
   getMe:           ()           => api.get("/restaurants/me"),
+   create:         (data)       => api.post("/restaurants", data),
   update:          (id, data)   => api.patch(`/restaurants/${id}`, data),
   updateSettings:  (id, data)   => api.patch(`/restaurants/${id}/settings`, { settings: data }),
   toggleQueue:     (id, isOpen) => api.patch(`/restaurants/${id}/queue/toggle`, { isOpen }),

@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import Login          from "./pages/Login";
+import Onboarding     from "./pages/Onboarding";   // ← ADD
 import AppShell       from "./components/layout/AppShell";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import QueueBoard     from "./pages/QueueBoard";
@@ -10,22 +11,21 @@ import Analytics      from "./pages/Analytics";
 import Settings       from "./pages/Settings";
 
 const router = createBrowserRouter([
-  { path: "/login", element: <Login /> },
+  { path: "/login",       element: <Login /> },
+  { path: "/onboarding",  element: <ProtectedRoute />, children: [{ index:true, element: <Onboarding /> }] },
   {
     element: <ProtectedRoute />,
-    children: [
-      {
-        element: <AppShell />,
-        children: [
-          { path: "/",          element: <QueueBoard />  },
-          { path: "/floor",     element: <FloorView />   },
-          { path: "/orders",    element: <OrderManager /> },
-          { path: "/menu",      element: <MenuManager /> },
-          { path: "/analytics", element: <Analytics />   },
-          { path: "/settings",  element: <Settings />    },
-        ],
-      },
-    ],
+    children: [{
+      element: <AppShell />,
+      children: [
+        { path: "/",          element: <QueueBoard />  },
+        { path: "/floor",     element: <FloorView />   },
+        { path: "/orders",    element: <OrderManager /> },
+        { path: "/menu",      element: <MenuManager /> },
+        { path: "/analytics", element: <Analytics />   },
+        { path: "/settings",  element: <Settings />    },
+      ],
+    }],
   },
   { path: "*", element: <Login /> },
 ]);
