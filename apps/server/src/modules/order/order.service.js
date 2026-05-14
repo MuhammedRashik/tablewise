@@ -107,7 +107,11 @@ export const placeOrderService = async (
     status: ORDER_STATUS.PLACED,
   });
 
-  return order;
+   const populatedOrder = await Order.findById(order._id)
+    .populate("tableId", "tableNumber capacity")
+    .lean();
+
+  return populatedOrder;
 };
 
 export const getOrdersByTableService = async (tableId, restaurantId) => {
@@ -130,20 +134,14 @@ export const getOrdersByTableService = async (tableId, restaurantId) => {
 export const getActiveOrdersService = async (restaurantId) => {
   const orders = await Order.find({
     restaurantId,
-    status: {
-      $in: [
-        ORDER_STATUS.PLACED,
-        ORDER_STATUS.CONFIRMED,
-        ORDER_STATUS.PREPARING,
-      ],
-    },
+    status: { $in: [ORDER_STATUS.PLACED, ORDER_STATUS.CONFIRMED, ORDER_STATUS.PREPARING] },
   })
     .sort({ createdAt: 1 })
-    .populate("tableId", "tableNumber capacity")
+    .populate("tableId", "tableNumber capacity") // ← already there, confirm it's here
     .lean();
 
   const grouped = {
-    placed: orders.filter((o) => o.status === ORDER_STATUS.PLACED),
+    placed:    orders.filter((o) => o.status === ORDER_STATUS.PLACED),
     confirmed: orders.filter((o) => o.status === ORDER_STATUS.CONFIRMED),
     preparing: orders.filter((o) => o.status === ORDER_STATUS.PREPARING),
   };
@@ -192,15 +190,16 @@ export const updateOrderStatusService = async (
       if (item.status === "pending") item.status = "preparing";
     });
   }
-
   if (newStatus === ORDER_STATUS.SERVED) {
-    order.items.forEach((item) => {
-      item.status = "served";
-    });
+    order.items.forEach((item) => { item.status = "served"; });
   }
 
   await order.save();
-  return order;
+  const populated = await Order.findById(order._id)
+    .populate("tableId", "tableNumber capacity")
+    .lean();
+
+  return populated;
 };
 
 export const updateItemStatusService = async (
