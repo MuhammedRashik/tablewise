@@ -101,30 +101,47 @@ export default function OtpVerify() {
             </div>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24, flex: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24, flex: 1, width: "100%",  overflow: "hidden" }}>
 
             {/* OTP boxes */}
-            <div style={{ display: "flex", gap: 10 }} onPaste={handlePaste}>
-              {otp.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => (inputRefs.current[i] = el)}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(i, e)}
-                  style={{
-                    flex: 1, height: 64, textAlign: "center", fontSize: 24, fontWeight: 600,
-                    background: digit ? "rgba(201,168,76,0.1)" : "var(--glass)",
-                    border: digit ? "1.5px solid var(--gold)" : "1px solid var(--border)",
-                    borderRadius: 14, color: digit ? "var(--gold)" : "var(--text)",
-                    outline: "none", transition: "all 0.15s", fontFamily: "'DM Sans',sans-serif",
-                  }}
-                />
-              ))}
-            </div>
+           {/* 6-box OTP input */}
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(6, 1fr)", // ← grid instead of flex
+    gap: "8px",
+    width: "100%",                          // ← full width of parent
+  }}
+  onPaste={handlePaste}
+>
+  {otp.map((digit, i) => (
+    <input
+      key={i}
+      ref={(el) => (inputRefs.current[i] = el)}
+      type="text"
+      inputMode="numeric"
+      maxLength={1}
+      value={digit}
+      onChange={(e) => handleOtpChange(i, e.target.value)}
+      onKeyDown={(e) => handleKeyDown(i, e)}
+      style={{
+        width: "100%",          // ← fills its grid cell
+        aspectRatio: "1",       // ← always square regardless of width
+        minWidth: 0,            // ← prevents overflow
+        textAlign: "center",
+        fontSize: "clamp(18px, 5vw, 24px)", // ← scales with screen
+        fontWeight: 600,
+        background: digit ? "rgba(201,168,76,0.1)" : "var(--glass)",
+        border: digit ? "1.5px solid var(--gold)" : "1px solid var(--border)",
+        borderRadius: 12,
+        color: digit ? "var(--gold)" : "var(--text)",
+        outline: "none",
+        transition: "all 0.15s",
+        fontFamily: "'DM Sans',sans-serif",
+      }}
+    />
+  ))}
+</div>
 
             {error && (
               <div style={{ background: "rgba(226,75,74,0.1)", border: "1px solid rgba(226,75,74,0.2)", borderRadius: 12, padding: "12px 16px", fontSize: 13, color: "#E24B4A" }}>

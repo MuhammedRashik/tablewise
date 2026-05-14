@@ -1,21 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-/**
- * orderStore — manages cart state and active order.
- * Cart lives here until order is placed; active order tracks status.
- */
 export const useOrderStore = create(
   persist(
     (set, get) => ({
-      // Cart — array of { menuItemId, name, price, isVeg, quantity, notes }
-      cart: [],
+      cart:              [],
+      activeOrder:       null,
+      allSessionOrders:  [], // ← NEW: tracks all orders this session
+      tableId:           null,
 
-      // Active placed order
-      activeOrder: null,
-      tableId:     null,
-
-      // ── Cart actions ────────────────────────────────────────────────────
+      // ── Cart actions ──────────────────────────────────────────────────
       addToCart: (item) => {
         const existing = get().cart.find((i) => i.menuItemId === item.menuItemId);
         if (existing) {
@@ -39,10 +33,7 @@ export const useOrderStore = create(
         })),
 
       updateQuantity: (menuItemId, quantity) => {
-        if (quantity <= 0) {
-          get().removeFromCart(menuItemId);
-          return;
-        }
+        if (quantity <= 0) { get().removeFromCart(menuItemId); return; }
         set((state) => ({
           cart: state.cart.map((i) =>
             i.menuItemId === menuItemId ? { ...i, quantity } : i
@@ -50,28 +41,39 @@ export const useOrderStore = create(
         }));
       },
 
-      updateItemNote: (menuItemId, notes) =>
-        set((state) => ({
-          cart: state.cart.map((i) =>
-            i.menuItemId === menuItemId ? { ...i, notes } : i
-          ),
-        })),
-
       clearCart: () => set({ cart: [] }),
 
-      // ── Order actions ───────────────────────────────────────────────────
-      setActiveOrder: (order, tableId) => set({ activeOrder: order, tableId }),
-
-      updateOrderStatus: (status, items) =>
+      // ── Order actions ─────────────────────────────────────────────────
+      setActiveOrder: (order, tableId) =>
         set((state) => ({
-          activeOrder: state.activeOrder
-            ? { ...state.activeOrder, status, items: items || state.activeOrder.items }
-            : null,
+          activeOrder:      order,
+          tableId,
+          // Add to session orders — avoid duplicates
+          allSessionOrders: state.allSessionOrders.find((o) => o._id === order._id)
+            ? state.allSessionOrders
+            : [...state.allSessionOrders, order],
         })),
 
-      clearOrder: () => set({ activeOrder: null, tableId: null }),
+      // Update a specific order's status and items in both places
+      updateOrderStatus: (status, items, orderId) =>
+        set((state) => {
+          const targetId = orderId || state.activeOrder?._id;
+          const updateOrder = (o) =>
+            o._id === targetId
+              ? { ...o, status, items: items || o.items }
+              : o;
+          return {
+            activeOrder: state.activeOrder?._id === targetId
+              ? updateOrder(state.activeOrder)
+              : state.activeOrder,
+            allSessionOrders: state.allSessionOrders.map(updateOrder),
+          };
+        }),
 
-      // ── Computed values ─────────────────────────────────────────────────
+      clearOrder: () =>
+        set({ activeOrder: null, tableId: null, allSessionOrders: [] }),
+
+      // ── Computed ──────────────────────────────────────────────────────
       cartTotal: () =>
         get().cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
 
@@ -81,9 +83,10 @@ export const useOrderStore = create(
     {
       name: "tw-order",
       partialize: (state) => ({
-        cart:        state.cart,
-        activeOrder: state.activeOrder,
-        tableId:     state.tableId,
+        cart:             state.cart,
+        activeOrder:      state.activeOrder,
+        allSessionOrders: state.allSessionOrders,
+        tableId:          state.tableId,
       }),
     }
   )
