@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { getSocket, connectSocket } from "../lib/socket";
+import { getSocket } from "../lib/socket";
 import { useKitchenStore } from "../store/kitchenStore";
 import { orderApi } from "../services/order.api";
 
@@ -12,63 +12,89 @@ export const useKitchenSocket = () => {
 
   const loadedRef = useRef(false);
 
-  // ── Initial data load ───────────────────────────────────────────────────
-  const loadOrders = async () => {
-    if (!restaurantId) return;
+  const loadOrdersViaRest = async () => {
+    if (!restaurantId || loadedRef.current) return;
     try {
       const res = await orderApi.getActive(restaurantId);
       setOrders(res.data.orders || []);
+      loadedRef.current = true;
     } catch (err) {
-      console.error("[Kitchen] Failed to load orders:", err.message);
+      console.error("[Kitchen] REST fallback failed:", err.message);
     }
   };
 
-  // ── Socket setup ────────────────────────────────────────────────────────
+  const joinRooms = (socket) => {
+    socket.emit("join-kitchen-room",    { restaurantId }, (ack) => {
+      if (ack?.success) console.log("[Kitchen] Joined kitchen room");
+    });
+    socket.emit("join-restaurant-room", { restaurantId }, (ack) => {
+      if (ack?.success) console.log("[Kitchen] Joined restaurant room");
+    });
+  };
+
+  const loadOrdersViaSocket = (socket) => {
+    socket.emit("get-active-orders", { restaurantId }, (res) => {
+      if (res?.success && Array.isArray(res.orders)) {
+        setOrders(res.orders);
+        loadedRef.current = true;
+      } else {
+        // Socket callback returned nothing useful — use REST
+        loadOrdersViaRest();
+      }
+    });
+
+    // Fallback if callback never fires (e.g. server doesn't ack)
+    setTimeout(() => {
+      if (!loadedRef.current) loadOrdersViaRest();
+    }, 3000);
+  };
+
   useEffect(() => {
     if (!token || !restaurantId) return;
 
-    let socket = getSocket();
-
-    // Reconnect if needed (e.g. page refresh)
-    if (!socket || !socket.connected) {
-      socket = connectSocket(token);
+    // By the time this hook runs, App.jsx has already called connectSocket
+    // and waited for the connect event. So getSocket() is guaranteed to
+    // return a connected socket here.
+    const socket = getSocket();
+    if (!socket) {
+      console.error("[Kitchen] Socket not found — was connectSocket called?");
+      loadOrdersViaRest();
+      return;
     }
 
+    // ── If already connected (normal case after App.jsx setup) ─────────
+    if (socket.connected) {
+      setConnected(true);
+      joinRooms(socket);
+      loadOrdersViaSocket(socket);
+    }
+
+    // ── Handlers ───────────────────────────────────────────────────────
+
+    // connect fires if we weren't connected yet when this hook ran
     const onConnect = () => {
       setConnected(true);
-      console.log("[Kitchen] Socket connected");
-
-      // Join rooms
-      socket.emit("join-kitchen-room",     { restaurantId });
-      socket.emit("join-restaurant-room",  { restaurantId });
-
-      // Request current active orders via socket
-      socket.emit("get-active-orders", { restaurantId }, (res) => {
-        if (res?.success && res.orders?.length > 0) {
-          setOrders(res.orders);
-          loadedRef.current = true;
-        }
-      });
-
-      // Fallback: load via REST if socket callback didn't fire
-      if (!loadedRef.current) {
-        setTimeout(() => {
-          if (!loadedRef.current) loadOrders();
-        }, 2000);
-      }
+      joinRooms(socket);
+      if (!loadedRef.current) loadOrdersViaSocket(socket);
     };
 
     const onDisconnect = (reason) => {
       setConnected(false);
-      console.log("[Kitchen] Socket disconnected:", reason);
+      loadedRef.current = false; // reset so we reload on next connect
+      console.log("[Kitchen] Disconnected:", reason);
     };
 
-    // ── Order events ──────────────────────────────────────────────────────
+    // Socket.IO v4 uses 'reconnect' event on the socket manager
+    const onReconnect = (attemptNumber) => {
+      console.log(`[Kitchen] Reconnected after ${attemptNumber} attempt(s)`);
+      setConnected(true);
+      joinRooms(socket);
+      loadOrdersViaRest(); // always reload orders fresh after reconnect
+    };
+
     const onNewOrder = ({ order }) => {
       addOrder(order);
-      // Clear the "new" flash after 3 seconds
       setTimeout(() => clearNewFlag(order._id), 3000);
-      // Play a sound alert
       playAlert();
     };
 
@@ -80,38 +106,31 @@ export const useKitchenSocket = () => {
     socket.on("disconnect",    onDisconnect);
     socket.on("new-order",     onNewOrder);
     socket.on("order-updated", onOrderUpdated);
-
-    // If already connected, run onConnect immediately
-    if (socket.connected) onConnect();
+    socket.io.on("reconnect",  onReconnect); // manager-level reconnect event
 
     return () => {
       socket.off("connect",       onConnect);
       socket.off("disconnect",    onDisconnect);
       socket.off("new-order",     onNewOrder);
       socket.off("order-updated", onOrderUpdated);
+      socket.io.off("reconnect",  onReconnect);
     };
   }, [token, restaurantId]);
 };
 
-// ── Audio alert ─────────────────────────────────────────────────────────────
-// Simple Web Audio API beep — no external file needed
+// ── Web Audio beep ────────────────────────────────────────────────────────
 const playAlert = () => {
   try {
     const ctx  = new (window.AudioContext || window.webkitAudioContext)();
     const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
-
     osc.connect(gain);
     gain.connect(ctx.destination);
-
-    osc.type      = "sine";
+    osc.type = "sine";
     osc.frequency.setValueAtTime(880, ctx.currentTime);
     gain.gain.setValueAtTime(0.3, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.6);
-  } catch {
-    // AudioContext blocked before user interaction — ignore silently
-  }
+  } catch { /* blocked before user interaction — silent fail */ }
 };
