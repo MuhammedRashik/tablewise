@@ -26,7 +26,7 @@ export default function OrderTracker() {
   } = useOrderStore();
 
   const restaurantId = activeOrder?.restaurantId;
-  const { requestBill, isRequestingBill } = useOrder(restaurantId);
+  const { requestBill, isRequestingBill, cancelOrder, isCancelling } = useOrder(restaurantId);
   const [billOpen, setBillOpen]   = useState(false);
   const [payMethod, setPayMethod] = useState("upi");
 
@@ -43,6 +43,10 @@ export default function OrderTracker() {
   // Latest unpaid order that can have bill requested
   const billableOrder = orders.find((o) => o.status === "served");
   const allPaid       = orders.length > 0 && orders.every((o) => o.status === "paid");
+
+  const cancellableOrder = orders.find((o) =>
+  ["placed", "confirmed"].includes(o.status)
+);
 
   if (orders.length === 0) {
     return (
@@ -207,34 +211,58 @@ export default function OrderTracker() {
       </div>
 
       {/* Bottom actions */}
-      <div style={{
-        position:"fixed", bottom:0, left:0, right:0,
-        padding:"12px 24px 40px",
-        background:"linear-gradient(to top, var(--bg) 60%, transparent)",
-        display:"flex", flexDirection:"column", gap:10,
-      }}>
-        {billableOrder && (
-          <button
-            onClick={() => setBillOpen(true)}
-            className="btn-gold"
-            style={{ borderRadius:16 }}
-          >
-            {isRequestingBill
-              ? <span className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor:"rgba(0,0,0,0.2)", borderTopColor:"#0D0D0D" }} />
-              : `Request bill · ₹${grandTotal.toFixed(2)}`
-            }
-          </button>
-        )}
-        {!allPaid && (
-          <button
-            onClick={() => navigate("/menu")}
-            className="btn-ghost"
-            style={{ borderRadius:16 }}
-          >
-            <Plus size={15} /> Add more items
-          </button>
-        )}
-      </div>
+     {/* Bottom actions */}
+<div style={{
+  position: "fixed", bottom: 0, left: 0, right: 0,
+  padding: "12px 24px 40px",
+  background: "linear-gradient(to top, var(--bg) 60%, transparent)",
+  display: "flex", flexDirection: "column", gap: 10,
+}}>
+  {billableOrder && (
+    <button
+      onClick={() => setBillOpen(true)}
+      className="btn-gold"
+      style={{ borderRadius: 16 }}
+    >
+      {isRequestingBill
+        ? <span className="w-4 h-4 rounded-full border-2 animate-spin"
+            style={{ borderColor:"rgba(0,0,0,0.2)", borderTopColor:"#0D0D0D" }} />
+        : `Request bill · ₹${grandTotal.toFixed(2)}`
+      }
+    </button>
+  )}
+
+  {!allPaid && (
+    <button
+      onClick={() => navigate("/menu")}
+      className="btn-ghost"
+      style={{ borderRadius: 16 }}
+    >
+      <Plus size={15} /> Add more items
+    </button>
+  )}
+
+  {/* Cancel order — only shown for placed or confirmed orders */}
+  {cancellableOrder && (
+    <button
+      onClick={() => {
+        if (window.confirm("Cancel this order? This cannot be undone.")) {
+          cancelOrder(cancellableOrder._id);
+        }
+      }}
+      disabled={isCancelling}
+      style={{
+        width: "100%", height: 48,
+        borderRadius: 16, border: "1px solid rgba(226,75,74,0.3)",
+        background: "transparent", color: "#E24B4A",
+        fontSize: 14, fontWeight: 500, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+      }}
+    >
+      {isCancelling ? "Cancelling…" : "Cancel order"}
+    </button>
+  )}
+</div>
 
       {/* Payment method sheet */}
       <BottomSheet isOpen={billOpen} onClose={() => setBillOpen(false)} title="How would you like to pay?">

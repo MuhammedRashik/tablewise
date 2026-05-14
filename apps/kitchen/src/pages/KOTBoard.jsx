@@ -62,16 +62,17 @@ export default function KOTBoard() {
 
   // ── Actions ───────────────────────────────────────────────────────────
   const handleUpdateStatus = async (orderId, status) => {
-    setIsActing(true);
-    try {
-      await orderApi.updateStatus(restaurantId, orderId, status);
-      updateOrderStatus(orderId, status);
-    } catch (err) {
-      console.error("[Kitchen] Update status failed:", err.message);
-    } finally {
-      setIsActing(false);
-    }
-  };
+  setIsActing(true);
+  try {
+    await orderApi.updateStatus(restaurantId, orderId, status);
+    // This calls store's updateOrderStatus which now auto-removes served orders
+    updateOrderStatus(orderId, status);
+  } catch (err) {
+    console.error("[Kitchen] Update status failed:", err.message);
+  } finally {
+    setIsActing(false);
+  }
+};
 
   const handleUpdateItemStatus = async (orderId, itemId, status) => {
     setIsActing(true);

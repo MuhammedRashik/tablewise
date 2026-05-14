@@ -13,6 +13,9 @@ export const orderApi = {
   requestBill: (restaurantId, orderId, paymentMethod) =>
     api.post(`/orders/${restaurantId}/${orderId}/bill`, { paymentMethod }),
 
+  cancel:      (restaurantId, orderId) =>             
+    api.patch(`/orders/${restaurantId}/${orderId}/cancel`),
+
   getHistory: (page = 1, limit = 10) =>
     api.get(`/orders/my-history?page=${page}&limit=${limit}`),
 };

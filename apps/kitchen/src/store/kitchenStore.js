@@ -51,13 +51,13 @@ export const useKitchenStore = create(
         })),
 
       // Update order status (confirmed, preparing, served etc.)
-      updateOrderStatus: (orderId, status) =>
-        set((s) => ({
-          orders: s.orders
-            .map((o) => o._id === orderId ? { ...o, status } : o)
-            // Remove from board when paid or cancelled
-            .filter((o) => !["paid", "cancelled"].includes(o.status)),
-        })),
+     updateOrderStatus: (orderId, status) =>
+  set((s) => ({
+    orders: s.orders
+      .map((o) => o._id === orderId ? { ...o, status } : o)
+      // Remove from kitchen board when done
+      .filter((o) => !["served", "paid", "cancelled"].includes(o.status)),
+  })),
 
       // Update individual item status
       updateItemStatus: (orderId, itemId, status) =>

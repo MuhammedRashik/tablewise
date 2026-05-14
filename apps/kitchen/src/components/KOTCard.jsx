@@ -34,11 +34,15 @@ export default function KOTCard({ order, onUpdateStatus, onUpdateItemStatus, isA
   const sl = STATUS_LABEL[order.status] || STATUS_LABEL.placed;
   const cardClass = order.isNew ? "kot-new" : CARD_CLASS[urgency] || "kot-normal";
 
-  const handleMarkPrepared = () => {
-    if (order.status === "placed")    onUpdateStatus(order._id, "confirmed");
-    if (order.status === "confirmed") onUpdateStatus(order._id, "preparing");
-    if (order.status === "preparing") onUpdateStatus(order._id, "served");
-  };
+  const handleMarkPrepared = async () => {
+  if (order.status === "placed")    { onUpdateStatus(order._id, "confirmed"); return; }
+  if (order.status === "confirmed") { onUpdateStatus(order._id, "preparing"); return; }
+  if (order.status === "preparing") {
+    // Show a brief "Done!" state before the card disappears
+    onUpdateStatus(order._id, "served");
+    return;
+  }
+};
 
   const getButtonLabel = () => {
     if (order.status === "placed")    return "Confirm order";
@@ -109,26 +113,20 @@ export default function KOTCard({ order, onUpdateStatus, onUpdateItemStatus, isA
       </div>
 
       {/* Action button */}
-      <button
-        onClick={handleMarkPrepared}
-        disabled={isActing || isServed}
-        className={`
-          btn-done
-          ${isServed  ? "btn-done-done"   :
-            urgency === "urgent" ? "btn-done-urgent" :
-            "btn-done-active"}
-        `}
-      >
-        {isServed ? (
-          <span className="flex items-center justify-center gap-2">
-            <ChefHat size={16} /> Done
-          </span>
-        ) : (
-          <span className="flex items-center justify-center gap-2">
-            <ChefHat size={16} /> {getButtonLabel()}
-          </span>
-        )}
-      </button>
+      {!isServed && (
+  <button
+    onClick={handleMarkPrepared}
+    disabled={isActing}
+    className={`
+      btn-done
+      ${urgency === "urgent" ? "btn-done-urgent" : "btn-done-active"}
+    `}
+  >
+    <span style={{ display:"flex", alignItems:"center", justifyContent:"center", gap: 8 }}>
+      <ChefHat size={16} /> {getButtonLabel()}
+    </span>
+  </button>
+)}
     </div>
   );
 }

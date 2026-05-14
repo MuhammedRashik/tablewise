@@ -15,7 +15,7 @@ export const useDashboardStore = create((set) => ({
 
   // UI state
   selectedTab:   "queue", // queue | floor | orders | menu | analytics | settings
-  sidebarOpen:   true,
+  sidebarOpen: typeof window !== "undefined" ? window.innerWidth >= 1024 : true,
 
   // ── Queue mutations ───────────────────────────────────────────────────
   setQueueData: (entries, summary) => set({ queueEntries: entries, queueSummary: summary }),

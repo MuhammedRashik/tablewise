@@ -91,14 +91,32 @@ export default function OtpVerify() {
               placeholder="10-digit number" type="tel" inputMode="numeric" maxLength={10}
               error={error}
             />
-            <div style={{ marginTop: "auto", paddingBottom: 48 }}>
-              <button onClick={sendOtp} disabled={isSending || !name || !phone} className="btn-gold" style={{ borderRadius: 16 }}>
-                {isSending
-                  ? <span className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(0,0,0,0.2)", borderTopColor: "#0D0D0D" }} />
-                  : <><Smartphone size={16} /> Send OTP</>
-                }
-              </button>
-            </div>
+            <div className="mt-auto">
+  <button
+    onClick={sendOtp}
+    disabled={isSending || !name || !phone}
+    className="btn-gold"
+    style={{ borderRadius: 16 }}
+  >
+    {isSending ? (
+      <>
+        <span
+          style={{
+            width: 18, height: 18,
+            border: "2px solid rgba(0,0,0,0.2)",
+            borderTopColor: "#0D0D0D",
+            borderRadius: "50%",
+            display: "inline-block",
+            animation: "spin 0.7s linear infinite",
+          }}
+        />
+        <span>Sending…</span>
+      </>
+    ) : (
+      <><Smartphone size={16} /> Send OTP</>
+    )}
+  </button>
+</div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 24, flex: 1, width: "100%",  overflow: "hidden" }}>
@@ -161,19 +179,34 @@ export default function OtpVerify() {
               )}
             </div>
 
-            <div style={{ marginTop: "auto", paddingBottom: 48 }}>
-              <button
-                onClick={() => verifyOtp(otp.join(""))}
-                disabled={isVerifying || otp.some((d) => !d)}
-                className="btn-gold"
-                style={{ borderRadius: 16 }}
-              >
-                {isVerifying
-                  ? <span className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(0,0,0,0.2)", borderTopColor: "#0D0D0D" }} />
-                  : "Verify & continue"
-                }
-              </button>
-            </div>
+           <div style={{ marginTop: "auto", paddingBottom: 48 }}>
+  <button
+    onClick={() => verifyOtp(otp.join(""))}
+    disabled={isVerifying || otp.some((d) => !d)}
+    className="btn-gold"
+    style={{ borderRadius: 16, position: "relative" }}
+  >
+    {isVerifying ? (
+      <>
+        {/* Spinner */}
+        <span
+          style={{
+            width: 18, height: 18,
+            border: "2px solid rgba(0,0,0,0.2)",
+            borderTopColor: "#0D0D0D",
+            borderRadius: "50%",
+            display: "inline-block",
+            animation: "spin 0.7s linear infinite",
+          }}
+        />
+        <span>Verifying…</span>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </>
+    ) : (
+      "Verify & continue"
+    )}
+  </button>
+</div>
           </div>
         )}
       </div>
