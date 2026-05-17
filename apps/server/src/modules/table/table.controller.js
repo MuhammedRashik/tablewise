@@ -56,17 +56,20 @@ export const getTables = asyncHandler(async (req, res) => {
 
 // ── UPDATE STATUS ─────────────────────────────────────
 export const updateTableStatus = asyncHandler(async (req, res) => {
+  // Get io from Express app
+  const io = req.app.get("io");
+
   const table = await updateTableStatusService(
     req.params.tableId,
     req.params.restaurantId,
-    req.body.status
+    req.body.status,
+    io  // ← pass io so auto-assign can emit socket events
   );
 
   return res
     .status(200)
-    .json(ApiResponse(200, { table }, "Status updated"));
+    .json(new ApiResponse(200, { table }, "Table status updated"));
 });
-
 // ── DELETE TABLE ──────────────────────────────────────
 export const deleteTable = asyncHandler(async (req, res) => {
   const result = await deleteTableService(
