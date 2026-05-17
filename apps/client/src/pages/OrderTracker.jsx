@@ -36,12 +36,16 @@ export default function OrderTracker() {
     : activeOrder ? [activeOrder] : [];
 
   // Grand total across all session orders
-  const grandTotal = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const grandTax   = orders.reduce((sum, o) => sum + (o.tax   || 0), 0);
-  const grandSub   = orders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+ const activeOrders    = orders.filter((o) => o.status !== "cancelled");
+const grandTotal      = activeOrders.reduce((sum, o) => sum + (o.total    || 0), 0);
+const grandTax        = activeOrders.reduce((sum, o) => sum + (o.tax      || 0), 0);
+const grandSub        = activeOrders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+const hasSomethingToPay = activeOrders.some((o) =>
+  !["paid", "cancelled"].includes(o.status)
+);
 
   // Latest unpaid order that can have bill requested
-  const billableOrder = orders.find((o) => o.status === "served");
+  const billableOrder = activeOrders.find((o) => o.status === "served");
   const allPaid       = orders.length > 0 && orders.every((o) => o.status === "paid");
 
   const cancellableOrder = orders.find((o) =>
@@ -100,114 +104,135 @@ export default function OrderTracker() {
 
         {/* Each order */}
         {orders.map((order, idx) => (
-          <div
-            key={order._id}
-            style={{
-              background:"var(--glass)",
-              border:"1px solid var(--border)",
-              borderRadius:16, overflow:"hidden",
-            }}
-          >
-            {/* Order header */}
-            <div style={{
-              display:"flex", alignItems:"center", justifyContent:"space-between",
-              padding:"12px 16px",
-              borderBottom:"1px solid var(--border)",
-              background:"rgba(255,255,255,0.03)",
-            }}>
-              <div>
-                <p style={{ fontSize:11, color:"var(--text-3)", textTransform:"uppercase", letterSpacing:"0.06em" }}>
-                  Order {idx + 1}
-                </p>
-                <p style={{ fontSize:13, fontWeight:500, marginTop:2 }}>
-                  {order.orderNumber}
-                </p>
-              </div>
-              <OrderStatusChip status={order.status} />
-            </div>
+  <div
+    key={order._id}
+    style={{
+      background: order.status === "cancelled"
+        ? "rgba(226,75,74,0.05)"        // ← red tint for cancelled
+        : "var(--glass)",
+      border: order.status === "cancelled"
+        ? "1px solid rgba(226,75,74,0.2)"  // ← red border
+        : "1px solid var(--border)",
+      borderRadius: 16,
+      overflow: "hidden",
+      opacity: order.status === "cancelled" ? 0.6 : 1, // ← faded
+    }}
+  >
+    {/* Order header */}
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "12px 16px",
+      borderBottom: "1px solid var(--border)",
+      background: "rgba(255,255,255,0.03)",
+    }}>
+      <div>
+        <p style={{ fontSize: 11, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          Order {idx + 1}
+        </p>
+        <p style={{ fontSize: 13, fontWeight: 500, marginTop: 2 }}>
+          {order.orderNumber}
+        </p>
+      </div>
+      <OrderStatusChip status={order.status} />
+    </div>
 
-            {/* Items */}
-            <div style={{ padding:"8px 16px" }}>
-              {order.items?.map((item) => (
-                <div
-                  key={item._id}
-                  style={{
-                    display:"flex", alignItems:"center", gap:10,
-                    padding:"9px 0",
-                    borderBottom:"1px solid var(--border)",
-                  }}
-                >
-                  <div style={{ flexShrink:0 }}>{ITEM_ICON[item.status] || ITEM_ICON.pending}</div>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{
-                      fontSize:13,
-                      color: item.status === "served" ? "var(--text-3)" : "var(--text)",
-                      textDecoration: item.status === "served" ? "line-through" : "none",
-                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-                    }}>
-                      {item.name}
-                    </p>
-                    {item.notes && (
-                      <p style={{ fontSize:11, color:"var(--gold)", marginTop:2 }}>{item.notes}</p>
-                    )}
-                  </div>
-                  <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <p style={{ fontSize:11, color:"var(--text-3)" }}>×{item.quantity}</p>
-                    <p style={{ fontSize:13, fontWeight:500, color:"var(--gold)" }}>
-                      ₹{item.price * item.quantity}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Order subtotal */}
-            <div style={{
-              display:"flex", justifyContent:"space-between",
-              padding:"10px 16px",
-              borderTop:"1px solid var(--border)",
-            }}>
-              <span style={{ fontSize:12, color:"var(--text-3)" }}>
-                Order total
-              </span>
-              <span style={{ fontSize:13, fontWeight:500, color:"var(--text)" }}>
-                ₹{order.total}
-              </span>
-            </div>
+    {/* Items — strikethrough when cancelled */}
+    <div style={{ padding: "8px 16px" }}>
+      {order.items?.map((item) => (
+        <div
+          key={item._id}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "9px 0",
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          <div style={{ flexShrink: 0 }}>
+            {order.status === "cancelled"
+              ? <span style={{ fontSize: 12 }}>✕</span>
+              : (ITEM_ICON[item.status] || ITEM_ICON.pending)
+            }
           </div>
-        ))}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              fontSize: 13,
+              color: (item.status === "served" || order.status === "cancelled")
+                ? "var(--text-3)"
+                : "var(--text)",
+              textDecoration: (item.status === "served" || order.status === "cancelled")
+                ? "line-through"
+                : "none",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              {item.name}
+            </p>
+          </div>
+          <div style={{ textAlign: "right", flexShrink: 0 }}>
+            <p style={{ fontSize: 11, color: "var(--text-3)" }}>×{item.quantity}</p>
+            <p style={{
+              fontSize: 13, fontWeight: 500,
+              color: order.status === "cancelled" ? "var(--text-3)" : "var(--gold)",
+              textDecoration: order.status === "cancelled" ? "line-through" : "none",
+            }}>
+              ₹{item.price * item.quantity}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Order subtotal */}
+    <div style={{
+      display: "flex", justifyContent: "space-between",
+      padding: "10px 16px",
+      borderTop: "1px solid var(--border)",
+    }}>
+      <span style={{ fontSize: 12, color: "var(--text-3)" }}>
+        {order.status === "cancelled" ? "Cancelled" : "Order total"}
+      </span>
+      <span style={{
+        fontSize: 13, fontWeight: 500,
+        color: order.status === "cancelled" ? "var(--text-3)" : "var(--text)",
+        textDecoration: order.status === "cancelled" ? "line-through" : "none",
+      }}>
+        ₹{order.total}
+      </span>
+    </div>
+  </div>
+))}
 
         {/* Grand total bill */}
-        {orders.length > 0 && (
-          <div style={{
-            background:"var(--glass-strong)",
-            border:"1px solid var(--border-h)",
-            borderRadius:16, padding:"16px",
-          }}>
-            <p style={{ fontSize:12, color:"var(--text-3)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:12 }}>
-              Final bill
-            </p>
-            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, color:"var(--text-2)" }}>
-                <span>Subtotal</span>
-                <span>₹{grandSub.toFixed(2)}</span>
-              </div>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, color:"var(--text-2)" }}>
-                <span>GST (5%)</span>
-                <span>₹{grandTax.toFixed(2)}</span>
-              </div>
-              <div style={{
-                display:"flex", justifyContent:"space-between",
-                fontSize:20, fontWeight:500,
-                paddingTop:10, marginTop:4,
-                borderTop:"1px solid var(--border)",
-              }}>
-                <span>Total to pay</span>
-                <span style={{ color:"var(--gold)" }}>₹{grandTotal.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Grand total — only show if there's something to pay */}
+{hasSomethingToPay && (
+  <div style={{
+    background: "var(--glass-strong)",
+    border: "1px solid var(--border-h)",
+    borderRadius: 16, padding: "16px",
+  }}>
+    <p style={{ fontSize: 12, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>
+      Final bill
+    </p>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--text-2)" }}>
+        <span>Subtotal</span>
+        <span>₹{grandSub.toFixed(2)}</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--text-2)" }}>
+        <span>GST (5%)</span>
+        <span>₹{grandTax.toFixed(2)}</span>
+      </div>
+      <div style={{
+        display: "flex", justifyContent: "space-between",
+        fontSize: 20, fontWeight: 500,
+        paddingTop: 10, marginTop: 4,
+        borderTop: "1px solid var(--border)",
+      }}>
+        <span>Total to pay</span>
+        <span style={{ color: "var(--gold)" }}>₹{grandTotal.toFixed(2)}</span>
+      </div>
+    </div>
+  </div>
+)}
       </div>
 
       {/* Bottom actions */}
