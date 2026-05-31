@@ -95,34 +95,29 @@ export const createTableService = async (
 export const getTablesService = async (restaurantId, filters = {}) => {
   const query = { restaurantId, isActive: true };
 
-  if (filters.status) {
-    query.status = filters.status;
+  if (filters.status) query.status = filters.status;
+
+  // Filter by minimum capacity if partySize provided
+  if (filters.partySize) {
+    query.capacity = { $gte: parseInt(filters.partySize) };
   }
 
   const tables = await Table.find(query)
-    .sort({ tableNumber: 1 })
+    .sort({ capacity: 1, tableNumber: 1 })
     .populate("currentQueueEntryId", "customerName partySize joinedAt");
 
   const summary = await Table.aggregate([
     {
       $match: {
-        restaurantId: new mongoose.Types.ObjectId(restaurantId),
+        restaurantId: mongoose.Types.ObjectId.createFromHexString(restaurantId),
         isActive: true,
-      },
+      }
     },
     { $group: { _id: "$status", count: { $sum: 1 } } },
   ]);
 
-  const counts = {
-    available: 0,
-    occupied: 0,
-    cleaning: 0,
-    reserved: 0,
-  };
-
-  summary.forEach((s) => {
-    if (counts[s._id] !== undefined) counts[s._id] = s.count;
-  });
+  const counts = { available:0, occupied:0, cleaning:0, reserved:0 };
+  summary.forEach((s) => { if (counts[s._id] !== undefined) counts[s._id] = s.count; });
 
   return { tables, counts };
 };

@@ -379,3 +379,158 @@ export const markNoShowService = async (queueId, restaurantId) => {
 
   return entry;
 };
+
+
+
+export const selectTableService = async (
+  restaurantId,
+  customer,
+  requestedTableId,
+  partySize,
+  notes
+) => {
+  const restaurant = await Restaurant.findById(restaurantId);
+
+  if (!restaurant) {
+    throw ApiError(404, "Restaurant not found");
+  }
+
+  if (!restaurant.settings.isQueueOpen) {
+    throw ApiError(423, "Queue is currently closed");
+  }
+
+  // Prevent duplicate active queue entries
+  const alreadyActive = await Queue.findOne({
+    restaurantId,
+    customerId: customer._id,
+    status: {
+      $in: [
+        QUEUE_STATUS.WAITING,
+        QUEUE_STATUS.CONFIRMED,
+        QUEUE_STATUS.CALLED,
+      ],
+    },
+  });
+
+  if (alreadyActive) {
+    throw ApiError(409, "You are already in this queue");
+  }
+
+  // Try to get requested table
+  const requestedTable = await Table.findOne({
+    _id: requestedTableId,
+    restaurantId,
+    status: TABLE_STATUS.AVAILABLE,
+    capacity: { $gte: partySize },
+    isActive: true,
+  });
+
+  // Create queue entry
+  const entry = await Queue.create({
+    restaurantId,
+    customerId: customer._id,
+    customerName: customer.name,
+    customerPhone: customer.phone,
+    partySize,
+    notes: notes || null,
+    joinedAt: new Date(),
+  });
+
+  // ── CASE 1: Requested table available ─────────────────────────────
+  if (requestedTable) {
+    await assignTableToQueueService(
+      requestedTable._id,
+      entry._id
+    );
+
+    entry.status = QUEUE_STATUS.CALLED;
+    entry.assignedTableId = requestedTable._id;
+    entry.calledAt = new Date();
+    entry.position = 1;
+    entry.estimatedWaitMinutes = 0;
+
+    const jobId = await scheduleAutoBump(
+      entry._id,
+      restaurantId,
+      restaurant.settings.autoBumpMinutes
+    );
+
+    entry.autoBumpJobId = jobId;
+
+    await entry.save();
+
+    // Populate response
+    const populated = await Queue.findById(entry._id).populate(
+      "assignedTableId",
+      "tableNumber capacity location"
+    );
+
+    return {
+      outcome: "success",
+      entry: populated,
+      assignedTable: requestedTable,
+      message: `Table ${requestedTable.tableNumber} assigned. Please proceed!`,
+    };
+  }
+
+  // ── CASE 2: Requested table taken ─────────────────────────────
+  const otherAvailable = await Table.find({
+    restaurantId,
+    status: TABLE_STATUS.AVAILABLE,
+    capacity: { $gte: partySize },
+    isActive: true,
+    _id: { $ne: requestedTableId },
+  }).sort({ capacity: 1 });
+
+  if (otherAvailable.length > 0) {
+    // Delete temporary queue entry
+    await Queue.findByIdAndDelete(entry._id);
+
+    return {
+      outcome: "conflict",
+
+      availableTables: otherAvailable.map((table) => ({
+        _id: table._id,
+        tableNumber: table.tableNumber,
+        capacity: table.capacity,
+        location: table.location,
+      })),
+
+      message: "That table was just taken. Please choose another.",
+    };
+  }
+
+  // ── CASE 3: No tables free → waitlist ─────────────────────────────
+  const totalActive = await recalculatePositions(restaurantId);
+
+  const updatedEntry = await Queue.findById(entry._id);
+
+  const availableCount = await Table.countDocuments({
+    restaurantId,
+    status: TABLE_STATUS.AVAILABLE,
+    capacity: { $gte: partySize },
+    isActive: true,
+  });
+
+  const positionsAhead = Math.max(
+    (updatedEntry.position || totalActive) - 1,
+    0
+  );
+
+  const ewt = calculateEWT(
+    positionsAhead,
+    availableCount,
+    restaurant.settings.avgTurnoverMinutes
+  );
+
+  updatedEntry.status = QUEUE_STATUS.WAITING;
+  updatedEntry.estimatedWaitMinutes = ewt;
+
+  await updatedEntry.save();
+
+  return {
+    outcome: "waitlisted",
+    entry: updatedEntry,
+    message: `All tables just filled up. You're #${updatedEntry.position} in the queue.`,
+  };
+};

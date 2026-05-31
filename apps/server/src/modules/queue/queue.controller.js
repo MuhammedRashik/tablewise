@@ -174,3 +174,34 @@ export const markNoShow = asyncHandler(async (req, res) => {
     .status(200)
     .json( ApiResponse(200, { entry }, "Marked as no-show"));
 });
+
+
+//SELECT TABLE
+export const selectTable = asyncHandler(async (req, res) => {
+  const { tableId, partySize, notes } = req.body;
+
+  const result = await selectTableService(
+    req.params.restaurantId,
+    req.user,
+    tableId,
+    partySize,
+    notes
+  );
+
+  const io = req.app.get("io");
+  if (io) {
+    const { emitQueueUpdate, emitTableReady } = require("../../sockets/queue.socket");
+    await emitQueueUpdate(io, req.params.restaurantId);
+
+    if (result.entry.status === "called") {
+      emitTableReady(io, req.user._id.toString(), {
+        tableNumber: result.assignedTable.tableNumber,
+        tableId:     result.assignedTable._id,
+      });
+    }
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, result.message));
+});

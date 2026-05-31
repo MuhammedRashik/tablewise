@@ -59,14 +59,39 @@ export default function Welcome() {
     );
   }
 
-  const handleJoin = () => {
-    if (!isLoggedIn) {
-      sessionStorage.setItem("tw-pending-join", JSON.stringify({ restaurantId, partySize, notes }));
-      navigate(`/auth/${restaurantId}`);
-      return;
+  const handleJoin = async () => {
+  if (!isLoggedIn) {
+    sessionStorage.setItem("tw-pending-join", JSON.stringify({
+      restaurantId, partySize, notes
+    }));
+    navigate(`/auth/${restaurantId}`);
+    return;
+  }
+
+  // Check how many tables are available for this party size
+  try {
+    const res = await queueApi.getAvailableTables(restaurantId, partySize);
+    const available = res.data?.tables || [];
+    console.log(available,'ava tablees');
+    
+
+    if (available.length > 1) {
+      // Multiple tables free → let customer choose
+      navigate("/select-table", {
+        state: { restaurantId, partySize, notes, availableTables: available }
+      });
+    } else if (available.length === 1) {
+      // Only one table → assign directly, no choice needed
+      joinQueue({ partySize, notes });
+    } else {
+      // No tables → join waitlist directly
+      joinQueue({ partySize, notes });
     }
+  } catch {
+    // If fetch fails, fall back to normal join
     joinQueue({ partySize, notes });
-  };
+  }
+};
 
   return (
     <div className="screen">

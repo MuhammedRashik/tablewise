@@ -4,6 +4,7 @@ import { ArrowLeft, Smartphone } from "lucide-react";
 import { useOtp } from "../hooks/useOtp";
 import { useQueue } from "../hooks/useQueue";
 import Input from "../components/ui/Input";
+import { queueApi } from "../services/queue.api";
 
 export default function OtpVerify() {
   const { restaurantId } = useParams();
@@ -20,18 +21,35 @@ export default function OtpVerify() {
   const [otp, setOtp]   = useState(["", "", "", "", "", ""]);
   const inputRefs       = useRef([]);
 
-  useEffect(() => {
-    if (isSuccess) {
-      const pending = sessionStorage.getItem("tw-pending-join");
-      if (pending) {
-        sessionStorage.removeItem("tw-pending-join");
-        const { restaurantId: rid, partySize, notes } = JSON.parse(pending);
-        joinQueue({ partySize, notes });
-      } else {
-        navigate(`/join/${restaurantId}`);
-      }
+ // In the useEffect where pending join is handled
+useEffect(() => {
+  if (isSuccess) {
+    const pending = sessionStorage.getItem("tw-pending-join");
+    if (pending) {
+      sessionStorage.removeItem("tw-pending-join");
+      const { restaurantId: rid, partySize, notes } = JSON.parse(pending);
+
+      // Check table availability before deciding flow
+      queueApi.getAvailableTables(rid, partySize)
+        .then((res) => {
+          const available = res.data?.tables || [];
+          if (available.length > 1) {
+            navigate("/select-table", {
+              state: { restaurantId: rid, partySize, notes, availableTables: available }
+            });
+          } else {
+            joinQueue({ partySize, notes });
+          }
+        })
+        .catch(() => {
+          // Fallback to normal join
+          joinQueue({ partySize, notes });
+        });
+    } else {
+      navigate(`/join/${restaurantId}`);
     }
-  }, [isSuccess]);
+  }
+}, [isSuccess]);
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;

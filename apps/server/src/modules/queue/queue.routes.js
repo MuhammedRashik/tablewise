@@ -11,7 +11,9 @@ import {
   leaveQueue,
   bumpCustomer,
   markNoShow,
+  selectTable
 } from "./queue.controller.js";
+
 
 import {
   validateJoinQueue,
@@ -115,6 +117,16 @@ router.patch(
   validateQueueId,
   validate,
   markNoShow
+);
+
+// Customer selects a specific table
+router.post(
+  "/:restaurantId/select-table",
+  protect,
+  authorise("customer"),
+  validateRestaurantId,
+  validate,
+  selectTable 
 );
 
 export default router;

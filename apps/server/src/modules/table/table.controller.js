@@ -43,15 +43,16 @@ export const createTable = asyncHandler(async (req, res) => {
 
 // ── GET TABLES ────────────────────────────────────────
 export const getTables = asyncHandler(async (req, res) => {
-  const { status } = req.query;
+  const { status, partySize } = req.query;  // ← add partySize
 
-  const result = await getTablesService(req.params.restaurantId, {
-    status,
-  });
+  const result = await getTablesService(
+    req.params.restaurantId,
+    { status, partySize }  // ← pass it through
+  );
 
   return res
     .status(200)
-    .json(ApiResponse(200, result, "Tables fetched"));
+    .json(ApiResponse(200, result, "Tables fetched successfully"));
 });
 
 // ── UPDATE STATUS ─────────────────────────────────────
@@ -68,7 +69,7 @@ export const updateTableStatus = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, { table }, "Table status updated"));
+    .json(ApiResponse(200, { table }, "Table status updated"));
 });
 // ── DELETE TABLE ──────────────────────────────────────
 export const deleteTable = asyncHandler(async (req, res) => {
