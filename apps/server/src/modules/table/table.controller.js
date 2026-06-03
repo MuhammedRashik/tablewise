@@ -44,6 +44,7 @@ export const createTable = asyncHandler(async (req, res) => {
 // ── GET TABLES ────────────────────────────────────────
 export const getTables = asyncHandler(async (req, res) => {
   const { status, partySize } = req.query;  // ← add partySize
+console.log('hereee', status, partySize);
 
   const result = await getTablesService(
     req.params.restaurantId,

@@ -9,7 +9,7 @@ export const useOrder = (restaurantId) => {
   const navigate = useNavigate();
   const {
     cart, activeOrder,
-    setActiveOrder, updateOrderStatus, clearCart, clearOrder,
+    setActiveOrder, updateOrderStatus, clearCart,
   } = useOrderStore();
 
   // ── Place order ───────────────────────────────────────────────────────
@@ -37,30 +37,41 @@ export const useOrder = (restaurantId) => {
     mutationFn: ({ orderId, paymentMethod }) =>
       orderApi.requestBill(restaurantId, orderId, paymentMethod),
     onSuccess: (res) => {
-      updateOrderStatus("billed", res.data.order.items);
+      updateOrderStatus("billed", res.data.order.items, res.data.order._id);
     },
   });
 
-  // ── Cancel order ──────────────────────────────────────────────────────
+  // ── Cancel whole order ────────────────────────────────────────────────
   const cancelMutation = useMutation({
     mutationFn: (orderId) => orderApi.cancel(restaurantId, orderId),
     onSuccess: (res) => {
       updateOrderStatus("cancelled", res.data.order.items, res.data.order._id);
     },
-    onError: (err) => {
-      alert(err.message || "Cannot cancel this order");
+    onError: (err) => alert(err.message || "Cannot cancel this order"),
+  });
+
+  // ── Cancel single item ────────────────────────────────────────────────
+  const cancelItemMutation = useMutation({
+    mutationFn: ({ orderId, itemId }) =>
+      orderApi.cancelItem(restaurantId, orderId, itemId),
+    onSuccess: (res) => {
+      // Update the order in store with new items + status
+      updateOrderStatus(
+        res.data.order.status,
+        res.data.order.items,
+        res.data.order._id
+      );
     },
+    onError: (err) => alert(err.message || "Cannot cancel this item"),
   });
 
   // ── Socket.IO order status updates ───────────────────────────────────
   useEffect(() => {
     if (!activeOrder?._id) return;
     const socket = getSocket();
-
     const onStatusUpdate = ({ status, items }) => {
       updateOrderStatus(status, items);
     };
-
     socket.on("order-status-update", onStatusUpdate);
     return () => socket.off("order-status-update", onStatusUpdate);
   }, [activeOrder?._id]);
@@ -68,12 +79,14 @@ export const useOrder = (restaurantId) => {
   return {
     cart,
     activeOrder,
-    placeOrder:       placeMutation.mutate,
-    requestBill:      billMutation.mutate,
-    cancelOrder:      cancelMutation.mutate,        // ← expose it
-    isPlacing:        placeMutation.isPending,
-    isRequestingBill: billMutation.isPending,
-    isCancelling:     cancelMutation.isPending,     // ← expose it
-    placeError:       placeMutation.error?.message,
+    placeOrder:         placeMutation.mutate,
+    requestBill:        billMutation.mutate,
+    cancelOrder:        cancelMutation.mutate,
+    cancelItem:         cancelItemMutation.mutate,        // ← expose
+    isPlacing:          placeMutation.isPending,
+    isRequestingBill:   billMutation.isPending,
+    isCancelling:       cancelMutation.isPending,
+    isCancellingItem:   cancelItemMutation.isPending,     // ← expose
+    placeError:         placeMutation.error?.message,
   };
 };

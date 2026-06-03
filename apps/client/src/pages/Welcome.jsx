@@ -19,6 +19,7 @@ export default function Welcome() {
 
   const [partySize, setPartySize] = useState(2);
   const [notes, setNotes]         = useState("");
+  const [checkingTables, setCheckingTables] = useState(false);
 
   useEffect(() => {
     if (activeEntry && activeEntry.restaurantId === restaurantId) {
@@ -59,7 +60,8 @@ export default function Welcome() {
     );
   }
 
-  const handleJoin = async () => {
+ const handleJoin = async () => {
+  // Not logged in → save pending join and go to OTP
   if (!isLoggedIn) {
     sessionStorage.setItem("tw-pending-join", JSON.stringify({
       restaurantId, partySize, notes
@@ -68,28 +70,33 @@ export default function Welcome() {
     return;
   }
 
-  // Check how many tables are available for this party size
+  // Logged in → check available tables
+  setCheckingTables(true);
   try {
     const res = await queueApi.getAvailableTables(restaurantId, partySize);
-    const available = res.data?.tables || [];
-    console.log(available,'ava tablees');
-    
+    const available = (res.data?.tables || []).filter(
+      (t) => t.status === "available" && t.capacity >= partySize
+    );
 
     if (available.length > 1) {
-      // Multiple tables free → let customer choose
+      // Multiple tables → let customer choose
       navigate("/select-table", {
-        state: { restaurantId, partySize, notes, availableTables: available }
+        state: {
+          restaurantId,
+          partySize,
+          notes,
+          availableTables: available,
+        },
       });
-    } else if (available.length === 1) {
-      // Only one table → assign directly, no choice needed
-      joinQueue({ partySize, notes });
     } else {
-      // No tables → join waitlist directly
+      // 0 or 1 table → join directly (direct assign or waitlist)
       joinQueue({ partySize, notes });
     }
   } catch {
-    // If fetch fails, fall back to normal join
+    // If check fails for any reason → fall back to normal join
     joinQueue({ partySize, notes });
+  } finally {
+    setCheckingTables(false);
   }
 };
 
@@ -197,21 +204,34 @@ export default function Welcome() {
       {/* Bottom CTA */}
       <div className="anim-fade-up delay-4" style={{ padding: "0 24px 48px" }}>
         <button
-          onClick={handleJoin}
-          disabled={isJoining}
-          className="btn-gold pl-10 pr-10"
-          style={{ borderRadius: 16 }}
-        >
-          {isJoining ? (
-            <span className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(0,0,0,0.2)", borderTopColor: "#0D0D0D" }} />
-          ) : (
-            <>
-              <Users size={17} />
-              Join queue · {partySize} {partySize === 1 ? "person" : "people"}
-              <ArrowRight size={17} style={{ marginLeft: "auto" }} />
-            </>
-          )}
-        </button>
+  onClick={handleJoin}
+  disabled={isJoining || checkingTables}
+  className="btn-gold pl-10 pr-10"
+  style={{ borderRadius: 16 }}
+>
+  {(isJoining || checkingTables) ? (
+    <>
+      <span
+        style={{
+          width: 18, height: 18,
+          border: "2px solid rgba(0,0,0,0.2)",
+          borderTopColor: "#0D0D0D",
+          borderRadius: "50%",
+          display: "inline-block",
+          animation: "spin 0.7s linear infinite",
+        }}
+      />
+      <span>Checking tables…</span>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </>
+  ) : (
+    <>
+      <Users size={17} />
+      Join queue · {partySize} {partySize === 1 ? "person" : "people"}
+      <ArrowRight size={17} style={{ marginLeft: "auto" }} />
+    </>
+  )}
+</button>
         <p style={{ textAlign: "center", fontSize: 12, color: "var(--text-3)", marginTop: 12 }}>
           You'll verify your number in the next step
         </p>

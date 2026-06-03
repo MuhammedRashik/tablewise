@@ -11,6 +11,7 @@ import {
   markPaid,
   cancelOrder,
   getMyOrderHistory,
+  cancelOrderItem,
 } from "./order.controller.js";
 
 import {
@@ -115,6 +116,16 @@ router.patch(
   validateOrderId,
   validate,
   markPaid
+);
+
+// Cancel single item — customer only
+router.patch(
+  "/:restaurantId/:orderId/items/:itemId/cancel",
+  protect,
+  authorise("customer"),
+  validateOrderId,
+  validate,
+  cancelOrderItem
 );
 
 export default router;

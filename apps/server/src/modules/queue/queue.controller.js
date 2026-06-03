@@ -1,6 +1,7 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ApiResponse }  from "../../utils/ApiResponse.js";
 
+//  import {emitQueueUpdate, emitTableReady} from "../../sockets/queue.socket.js";
 import {
   joinQueueService,
   getQueuePositionService,
@@ -11,6 +12,7 @@ import {
   leaveQueueService,
   bumpCustomerService,
   markNoShowService,
+  selectTableService
 } from "./queue.service.js";
 
 import {
@@ -179,6 +181,7 @@ export const markNoShow = asyncHandler(async (req, res) => {
 //SELECT TABLE
 export const selectTable = asyncHandler(async (req, res) => {
   const { tableId, partySize, notes } = req.body;
+console.log('here');
 
   const result = await selectTableService(
     req.params.restaurantId,
@@ -188,9 +191,11 @@ export const selectTable = asyncHandler(async (req, res) => {
     notes
   );
 
+  console.log('here 222');
+  
   const io = req.app.get("io");
   if (io) {
-    const { emitQueueUpdate, emitTableReady } = require("../../sockets/queue.socket");
+    // const { emitQueueUpdate, emitTableReady } = require("../../sockets/queue.socket");
     await emitQueueUpdate(io, req.params.restaurantId);
 
     if (result.entry.status === "called") {
@@ -203,5 +208,5 @@ export const selectTable = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, result, result.message));
+    .json( ApiResponse(200, result, result.message));
 });

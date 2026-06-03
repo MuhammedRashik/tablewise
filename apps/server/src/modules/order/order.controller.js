@@ -202,3 +202,55 @@ export const getMyOrderHistory = asyncHandler(async (req, res) => {
     .status(200)
     .json( ApiResponse(200, result, "Order history fetched"));
 });
+
+
+// ── PATCH /api/orders/:restaurantId/:orderId/items/:itemId/cancel ─────────
+ export const cancelOrderItem = asyncHandler(async (req, res) => {
+  const { orderId, itemId, restaurantId } = req.params;
+
+  const order = await Order.findOne({
+    _id: orderId,
+    restaurantId,
+    customerId: req.user._id, // customer can only cancel their own
+  });
+
+  if (!order) throw new ApiError(404, "Order not found");
+
+  const item = order.items.id(itemId);
+  if (!item) throw new ApiError(404, "Item not found in this order");
+
+  if (item.status !== "pending") {
+    throw new ApiError(
+      400,
+      `Cannot cancel "${item.name}" — it is already ${item.status}`
+    );
+  }
+
+  // Check if this is the last non-cancelled item
+  // If so, cancel the whole order instead
+  const activeItems = order.items.filter(
+    (i) => i._id.toString() !== itemId && i.status !== "cancelled"
+  );
+
+  if (activeItems.length === 0) {
+    // Last item — cancel the whole order
+    order.status = "cancelled";
+    order.items.forEach((i) => { i.status = "cancelled"; });
+  } else {
+    // Just cancel this item
+    item.status = "cancelled";
+  }
+
+  await order.save();
+
+  // Emit socket update so kitchen board reflects the change
+  const io = req.app.get("io");
+  if (io) {
+    const { emitOrderStatusUpdate } = require("../../sockets/order.socket");
+    emitOrderStatusUpdate(io, order);
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { order }, "Item cancelled"));
+});

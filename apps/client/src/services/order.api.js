@@ -16,6 +16,9 @@ export const orderApi = {
   cancel:      (restaurantId, orderId) =>             
     api.patch(`/orders/${restaurantId}/${orderId}/cancel`),
 
+  cancelItem:     (restaurantId, orderId, itemId) =>         
+    api.patch(`/orders/${restaurantId}/${orderId}/items/${itemId}/cancel`),
+
   getHistory: (page = 1, limit = 10) =>
     api.get(`/orders/my-history?page=${page}&limit=${limit}`),
 };

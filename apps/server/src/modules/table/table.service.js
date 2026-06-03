@@ -95,10 +95,14 @@ export const createTableService = async (
 export const getTablesService = async (restaurantId, filters = {}) => {
   const query = { restaurantId, isActive: true };
 
-  if (filters.status) query.status = filters.status;
+  // Only filter by status if explicitly passed
+  if (filters.status) {
+    query.status = filters.status;
+  }
 
-  // Filter by minimum capacity if partySize provided
-  if (filters.partySize) {
+  // Only filter by capacity if partySize is a valid number
+  // DO NOT apply this filter for the dashboard floor view
+  if (filters.partySize && !isNaN(parseInt(filters.partySize))) {
     query.capacity = { $gte: parseInt(filters.partySize) };
   }
 
@@ -106,18 +110,21 @@ export const getTablesService = async (restaurantId, filters = {}) => {
     .sort({ capacity: 1, tableNumber: 1 })
     .populate("currentQueueEntryId", "customerName partySize joinedAt");
 
+  // const mongoose = require("mongoose");
   const summary = await Table.aggregate([
     {
       $match: {
-        restaurantId: mongoose.Types.ObjectId.createFromHexString(restaurantId),
+        restaurantId: new mongoose.Types.ObjectId(restaurantId),
         isActive: true,
       }
     },
     { $group: { _id: "$status", count: { $sum: 1 } } },
   ]);
 
-  const counts = { available:0, occupied:0, cleaning:0, reserved:0 };
-  summary.forEach((s) => { if (counts[s._id] !== undefined) counts[s._id] = s.count; });
+  const counts = { available: 0, occupied: 0, cleaning: 0, reserved: 0 };
+  summary.forEach((s) => {
+    if (counts[s._id] !== undefined) counts[s._id] = s.count;
+  });
 
   return { tables, counts };
 };

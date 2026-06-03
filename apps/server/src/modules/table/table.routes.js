@@ -46,7 +46,7 @@ router.post(
 // ── GET TABLES ────────────────────────────────────────
 router.get(
   "/",
-  authorise("owner", "staff"),
+  authorise("owner", "staff", "customer"),
   getTables
 );
 

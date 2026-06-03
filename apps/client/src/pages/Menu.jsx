@@ -185,7 +185,7 @@ export default function Menu() {
         }}>
           <button
             onClick={() => setCartOpen(true)}
-            className="btn-gold"
+            className="pl-10 pr-10 btn-gold"
             style={{ borderRadius:18, boxShadow:"0 8px 32px rgba(201,168,76,0.25)" }}
           >
             <ShoppingBag size={17} />

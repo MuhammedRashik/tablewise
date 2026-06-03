@@ -11,15 +11,35 @@ const MAP = {
 export default function OrderStatusChip({ status }) {
   const s = MAP[status] || MAP.placed;
   return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 6,
-      padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-      background: s.bg, color: s.color,
-    }}>
-      {status === "preparing" && (
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.color, display: "inline-block", animation: "pulse-soft 1.2s ease-in-out infinite" }} />
-      )}
-      {s.label}
-    </span>
+   <span
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    padding: "4px 12px",
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 500,
+    background: s.bg,
+    color: s.color,
+    textAlign: "center",
+    minWidth: "100px", // optional
+  }}
+>
+  {status === "preparing" && (
+    <span
+      style={{
+        width: 6,
+        height: 6,
+        borderRadius: "50%",
+        background: s.color,
+        display: "inline-block",
+        animation: "pulse-soft 1.2s ease-in-out infinite",
+      }}
+    />
+  )}
+  {s.label}
+</span>
   );
 }

@@ -41,7 +41,7 @@ export default function TableReady() {
           className="glass-strong anim-scale-in delay-2"
           style={{ width: "100%", padding: "32px 24px", marginBottom: 16, textAlign: "center" }}
         >
-          <p style={{ fontSize: 12, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
+          <p className="text-white" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
             Table number
           </p>
           <p className="gold-shimmer" style={{ fontSize: 56, fontFamily: "'Playfair Display',serif", lineHeight: 1 }}>

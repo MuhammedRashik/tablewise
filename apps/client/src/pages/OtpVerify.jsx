@@ -22,6 +22,8 @@ export default function OtpVerify() {
   const inputRefs       = useRef([]);
 
  // In the useEffect where pending join is handled
+
+// In the useEffect where pending join is handled
 useEffect(() => {
   if (isSuccess) {
     const pending = sessionStorage.getItem("tw-pending-join");
@@ -29,22 +31,33 @@ useEffect(() => {
       sessionStorage.removeItem("tw-pending-join");
       const { restaurantId: rid, partySize, notes } = JSON.parse(pending);
 
-      // Check table availability before deciding flow
+      // Check available tables after login
       queueApi.getAvailableTables(rid, partySize)
         .then((res) => {
-          const available = res.data?.tables || [];
+          const available = (res.data?.tables || []).filter(
+            (t) => t.status === "available" && t.capacity >= partySize
+          );
+
           if (available.length > 1) {
+            // Multiple tables → selection screen
             navigate("/select-table", {
-              state: { restaurantId: rid, partySize, notes, availableTables: available }
+              state: {
+                restaurantId: rid,
+                partySize,
+                notes,
+                availableTables: available,
+              },
             });
           } else {
+            // 0 or 1 table → direct join
             joinQueue({ partySize, notes });
           }
         })
         .catch(() => {
-          // Fallback to normal join
+          // Fallback — just join normally
           joinQueue({ partySize, notes });
         });
+
     } else {
       navigate(`/join/${restaurantId}`);
     }

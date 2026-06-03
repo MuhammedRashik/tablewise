@@ -8,6 +8,7 @@ import {
   assignTableToQueueService,
   releaseTableService
 } from "../table/table.service.js";
+import { Table, TABLE_STATUS } from "../table/table.model.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
