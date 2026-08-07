@@ -1,15 +1,11 @@
 import api from "../lib/axios";
 
 export const authApi = {
-  sendOtp: (name, phone) =>
-    api.post("/auth/send-otp", { name, phone }),
+  // Customer — Firebase token exchange
+  verifyFirebaseToken: (firebaseToken, name) =>
+    api.post("/auth/firebase/verify", { firebaseToken, name }),
 
-  verifyOtp: (phone, otp, name) =>
-    api.post("/auth/verify-otp", { phone, otp, name }),
-
-  getMe: () =>
-    api.get("/auth/me"),
-
-  logout: () =>
-    api.post("/auth/logout"),
+  // Staff — email + password (kept for dashboard/kitchen)
+  getMe:   () => api.get("/auth/me"),
+  logout:  () => api.post("/auth/logout"),
 };

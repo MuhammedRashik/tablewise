@@ -12,7 +12,7 @@ import orderRoutes from "./modules/order/order.routes.js";
 
 
 const app = express();
-console.log(process.env.CORS_ORIGIN,'origin');
+
 
 // ── Core middleware ───────────────────────────────────────────────────────
 app.use(

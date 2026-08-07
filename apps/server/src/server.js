@@ -44,6 +44,9 @@ const startServer = async () => {
   process.on("SIGINT", () => shutdown("SIGINT"));
 };
 
+console.log("PROJECT ID:", process.env.FIREBASE_PROJECT_ID);
+console.log("CLIENT EMAIL:", process.env.FIREBASE_CLIENT_EMAIL);
+
 startServer().catch((err) => {
   console.error("[Server] Failed to start:", err);
   process.exit(1);
